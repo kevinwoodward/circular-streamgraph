@@ -70,7 +70,7 @@ var call = (function enclosed() {
 
     d3.select("svg").attr("style", "outline: thin solid black;");
 
-    d3.csv(/*document.getElementById("fileID").value*/"tidalData.csv", type, function (error, data) {
+    d3.csv(document.getElementById("fileID").value, type, function (error, data) {
         if (error) throw error;
 
         var layers = stack(nest.entries(data));
