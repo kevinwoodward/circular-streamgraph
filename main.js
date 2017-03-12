@@ -1,19 +1,20 @@
 var call = (function enclosed() {
 
-    var formatMonth = d3.time.format("%m"),
-        month = function (d) {
-            return formatMonth(new Date(2017, d, 1));
-        };
+    var formatMonth = d3.time.format("%m");
+    var formatDay = d3.time.format("%a");
 
-    var formatDay = d3.time.format("%a"),
-        day = function (d) {
-            return formatDay(new Date(2017, 0, d));
-        };
+    function month(d) {
+        return formatMonth(new Date(2017, d, 1));
+    }
+
+    function day(d) {
+        return formatDay(new Date(2017, 0, d));
+    }
 
     var outerRadius = document.getElementById("outer").value;
     var innerRadius = document.getElementById("inner").value;
 
-    if(outerRadius <= innerRadius) {
+    if(Number(outerRadius) <= Number(innerRadius)) {
         outerRadius = innerRadius;
         innerRadius -= 10;
         document.getElementById("outer").value = outerRadius;
@@ -67,7 +68,9 @@ var call = (function enclosed() {
 
     var svg = d3.select("g");
 
-    d3.csv(document.getElementById("fileID").value, type, function (error, data) {
+    d3.select("svg").attr("style", "outline: thin solid black;");
+
+    d3.csv(/*document.getElementById("fileID").value*/"tidalData.csv", type, function (error, data) {
         if (error) throw error;
 
         var layers = stack(nest.entries(data));
@@ -106,7 +109,11 @@ var call = (function enclosed() {
             .attr("dy", ".70em")
             .attr("text-anchor", "middle")
             .text(function (d) {
-                return day(d);
+                if(svg.selectAll(".axis")[0].length == 7) {
+                    return day(d);
+                } else if(svg.selectAll(".axis")[0].length == 12) {
+                    return month(d);
+                }
             });
     });
 
@@ -115,7 +122,7 @@ var call = (function enclosed() {
         d.value = +d.value;
         return d;
     }
-    svg.selectAll("*").remove();
+    svg.selectAll("*").remove(); //remove all children to redraw
 });
 
 call();

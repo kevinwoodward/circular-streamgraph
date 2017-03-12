@@ -3,8 +3,8 @@
 <link rel="stylesheet" href="style.css">
 <body>
 CSV file (see docs for formatting): <input type="file"id="fileID"><br>
-Inner radius: <input type="range" value="100" id="inner" min="20" max="500" oninput="call()"><br>
-Outer radius: <input type="range" value="200" id="outer" min="30" max="510" oninput="call()">
+Inner radius: <input type="range" value="100" id="inner" min="20" max="500" oninput="call()" onmouseup="call()"><br>
+Outer radius: <input type="range" value="200" id="outer" min="30" max="510" oninput="call()" onmouseup="call()">
 
 <br>
 <script src="https://d3js.org/d3.v3.min.js"></script>
