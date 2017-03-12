@@ -1,88 +1,111 @@
-var call = (function enclosed() {
+var file = undefined; //global for selecting local file through buttons
+var randAccessor = false;
+var prevd = undefined;
+var main = (function () {
+    if(file == undefined) {
+        return; //don't do anything if no dataset selected
+    }
 
-    var formatMonth = d3.time.format("%m");
+    //accessors for csv file
+    function stringToNumber(d) {
+        d.time = Number(d.time);
+        d.value = Number(d.value);
+        return d;
+    }
+
+    function stringToNumberRand(d) {
+        d.time = Number(d.time);
+        d.value = Math.random()*1000;
+        return d;
+    }
+
+    //formatting for dates on axes
+    var formatMonth = d3.time.format("%B");
     var formatDay = d3.time.format("%a");
 
     function month(d) {
-        return formatMonth(new Date(2017, d, 1));
+        return formatMonth(new Date(2017, d, 1)).substring(0,3);
     }
 
     function day(d) {
         return formatDay(new Date(2017, 0, d));
     }
 
-    var outerRadius = document.getElementById("outer").value;
-    var innerRadius = document.getElementById("inner").value;
-
-    if(Number(outerRadius) <= Number(innerRadius)) {
-        outerRadius = innerRadius;
-        innerRadius -= 10;
-        document.getElementById("outer").value = outerRadius;
-        document.getElementById("inner").value = innerRadius;
+    function other(d) {
+        if((typeof d) == "number") {
+            return d+1;
+        }
+        return d;
     }
 
-    var angle = d3.time.scale()
-        .range([0, 2 * Math.PI]);
+    //dynamically get radii
+    var outerRad = document.getElementById("outer").value;
+    var innerRad = document.getElementById("inner").value;
 
-    var radius = d3.scale.linear()
-        .range([innerRadius, outerRadius]);
+    //correct radii if inner > outer
+    if(Number(outerRad) <= Number(innerRad)) {
+        outerRad = innerRad;
+        innerRad -= 10;
+        document.getElementById("outer").value = outerRad;
+        document.getElementById("inner").value = innerRad;
+    }
 
+    //define scaling time values from 0 to 2*pi for smoothness
+    var angle = d3.time.scale().range([0, 2 * Math.PI]);
+
+    //define scaling difference of radii values linearly
+    var rad = d3.scale.linear().range([innerRad, outerRad]);
+
+
+    //define color scale
     var colorScale = d3.scale.category10();
 
+    //define stacking to be the data with x value of point being time, and y being value
     var stack = d3.layout.stack()
-        .values(function (d) {
-            return d.values;
-        })
-        .x(function (d) {
-            return d.time;
-        })
-        .y(function (d) {
-            return d.value;
-        });
+        .values(function (d) {return d.values;})
+        .x(function (d) {return d.time;})
+        .y(function (d) {return d.value;});
 
-    var nest = d3.nest()
-        .key(function (d) {
-            return d.key;
-        });
+    //define nesting values with key field as key
+    var nest = d3.nest().key(function (d) {return d.key;});
 
-    var line = d3.svg.line.radial()
-        .interpolate("cardinal-closed")
-        .angle(function (d) {
-            return angle(d.time);
-        })
-        .radius(function (d) {
-            return radius(d.y0 + d.y);
-        });
-
+    //define interpolating data radially with angle proportional to time, inner radius being min radius value, and outer radius being min value plus y value of data established above
     var area = d3.svg.area.radial()
         .interpolate("cardinal-closed")
-        .angle(function (d) {
-            return angle(d.time);
-        })
-        .innerRadius(function (d) {
-            return radius(d.y0);
-        })
-        .outerRadius(function (d) {
-            return radius(d.y0 + d.y);
-        });
+        .angle(function (d) {return angle(d.time);})
+        .innerRadius(function (d) {return rad(d.y0);})
+        .outerRadius(function (d) {return rad(d.y0 + d.y);});
 
-    var svg = d3.select("g");
+    //dynamically transform svg groups to translate properly in resized svg element
+    var svg = d3.select("g")
+        .attr("transform",("translate(" + document.getElementById('svgSize').value / 2 + "," + document.getElementById('svgSize').value / 2 + ")"));
 
-    d3.select("svg").attr("style", "outline: thin solid black;");
+    //load csv
+    var accessor;
+    if(randAccessor) {
+        accessor = stringToNumberRand;
+    } else {
+        accessor = stringToNumber;
+    }
+    d3.csv(file, accessor, function (data) {
+        if(randAccessor && prevd != undefined) {
+            data = prevd;
+        }
+        //border for clarity
+        d3.select("svg").attr("style", "outline: solid black;");
 
-    d3.csv(document.getElementById("fileID").value, type, function (error, data) {
-        if (error) throw error;
-
+        //nest data for stackable displaying
         var layers = stack(nest.entries(data));
 
         // Extend the domain slightly to match the range of [0, 2π].
         angle.domain([0, d3.max(data, function (d) {
             return d.time;
         })]); //TODO: modify this for modular # of spokes.
-        radius.domain([0, d3.max(data, function (d) {
+        rad.domain([0, d3.max(data, function (d) {
             return d.y0 + d.y;
         })]);
 
+        //apply values to layers and set colorscale
         svg.selectAll(".layer")
             .data(layers)
             .enter().append("path")
@@ -94,18 +117,20 @@ var call = (function enclosed() {
                 return colorScale(i);
             });
 
+        //create and format axes based on input data
         svg.selectAll(".axis")
             .data(d3.range(angle.domain()[1]))
             .enter().append("g")
             .attr("class", "axis")
             .attr("transform", function (d) {
-                return "rotate(" + angle(d) * 180 / Math.PI + ")";
+                return "rotate(" + angle(d) * 180/Math.PI + ")";
             })
             .call(d3.svg.axis()
-                .scale(radius.copy().range([-innerRadius, -outerRadius]))
-                .orient("right"))
+                .scale(rad.copy().range([-innerRad, -outerRad]))
+                .orient("left")
+                .ticks((outerRad-innerRad)/15))
             .append("text")
-            .attr("y", -innerRadius + 3)
+            .attr("y", -innerRad + 3)
             .attr("dy", ".70em")
             .attr("text-anchor", "middle")
             .text(function (d) {
@@ -113,16 +138,18 @@ var call = (function enclosed() {
                     return day(d);
                 } else if(svg.selectAll(".axis")[0].length == 12) {
                     return month(d);
+                } else {
+                    return other(d);
                 }
             });
+        //randAccessor = false;
+        if(randAccessor) {
+            prevd = data;
+        }
     });
 
-    function type(d) {
-        d.time = +d.time;
-        d.value = +d.value;
-        return d;
-    }
-    svg.selectAll("*").remove(); //remove all children to redraw
+    //remove all children to redraw
+    svg.selectAll("*").remove();
 });
 
-call();
+main();
