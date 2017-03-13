@@ -3,6 +3,8 @@
 <head>
     <title>Prog2</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="main.js"></script>
 </head>
 <body>
 <h2>Prog 2, CMPS 161, Kevin Woodward, keawoodw@ucsc.edu</h2>
@@ -18,8 +20,6 @@ Outer radius: <input type="range" value="200" id="outer" min="30" max="510" onin
 SVG dimensions(n*n): <input type="range" value="750" id="svgSize" min="100" max="1500" oninput="document.getElementById('svgID').setAttribute('height', document.getElementById('svgSize').value);document.getElementById('svgID').setAttribute('width', document.getElementById('svgSize').value);main()" onmouseup="main()"><br>
 
 <br>
-<script src="https://d3js.org/d3.v3.min.js"></script>
 <svg id="svgID" width="750" height="750">
     <g id="gID"></g>
 </svg>
-<script src="main.js"></script>
