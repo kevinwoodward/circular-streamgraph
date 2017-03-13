@@ -3,9 +3,10 @@
 <link rel="stylesheet" href="style.css">
 <body>
 <h2>Prog 2, CMPS 161, Kevin Woodward, keawoodw@ucsc.edu</h2>
-Dataset: <input type="button" value="Weather" onclick="file='nottem.csv';randAccessor=false;main();">
-    <input type="button" value="Gas Prices" onclick="file='data.csv';randAccessor=false;main();">
+Dataset:
     <input type="button" value="Tides" onclick="file='tidalData.csv';randAccessor=false;main();">
+    <input type="button" value="Weather" onclick="file='nottem.csv';randAccessor=false;main();">
+    <input type="button" value="Gas Prices" onclick="file='data.csv';randAccessor=false;main();">
     <input type="button" value="Random Data (Monthly)" onclick="file='bogus.csv';randAccessor=true;prevd=undefined;main();"><br>
 Inner radius: <input type="range" value="100" id="inner" min="20" max="500" oninput="main()" onmouseup="main()"><br>
 Outer radius: <input type="range" value="200" id="outer" min="30" max="510" oninput="main()" onmouseup="main()"><br>
