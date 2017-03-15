@@ -61,7 +61,7 @@ var main = (function () {
     var colorScale = d3.scale.category10();
 
     //define stacking to be the data with x value of point being time, and y being value
-    var stack = d3.layout.stack()
+    var stackLayout = d3.layout.stack()
         .values(function (d) {return d.values;})
         .x(function (d) {return d.time;})
         .y(function (d) {return d.value;});
@@ -94,7 +94,7 @@ var main = (function () {
         d3.select("svg").attr("style", "outline: solid black;");
 
         //nest data for stackable displaying
-        var layers = stack(nest.entries(data));
+        var nested = stackLayout(nest.entries(data));
 
         // modify domain to fit properly circularly
         angle.domain([0, d3.max(data, function (d) {return d.time;})]);
@@ -104,7 +104,7 @@ var main = (function () {
 
         //apply values to layers and set colorscale
         svg.selectAll(".layer")
-            .data(layers)
+            .data(nested)
             .enter().append("path")
             .attr("class", "layer")
             .attr("d", function (d) {
