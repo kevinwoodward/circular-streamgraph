@@ -51,7 +51,7 @@ var main = (function () {
     }
 
     //define scaling time values from 0 to 2*pi for smoothness
-    var angle = d3.time.scale().range([0, 2 * Math.PI]);
+    var angle = d3.time.scale().range([0, 2*Math.PI]);
 
     //define scaling difference of radii values linearly
     var rad = d3.scale.linear().range([innerRad, outerRad]);
@@ -77,8 +77,7 @@ var main = (function () {
         .outerRadius(function (d) {return rad(d.y0 + d.y);});
 
     //dynamically transform svg groups to translate properly in resized svg element
-    var svg = d3.select("g")
-        .attr("transform",("translate(" + document.getElementById('svgSize').value / 2 + "," + document.getElementById('svgSize').value / 2 + ")"));
+    var svg = d3.select("g").attr("transform",("translate(" + document.getElementById('svgSize').value / 2 + "," + document.getElementById('svgSize').value / 2 + ")"));
 
     //load csv
     var accessor;
@@ -97,13 +96,11 @@ var main = (function () {
         //nest data for stackable displaying
         var layers = stack(nest.entries(data));
 
-        // Extend the domain slightly to match the range of [0, 2π].
-        angle.domain([0, d3.max(data, function (d) {
-            return d.time;
-        })]); //TODO: modify this for modular # of spokes.
-        rad.domain([0, d3.max(data, function (d) {
-            return d.y0 + d.y;
-        })]);
+        // modify domain to fit properly circularly
+        angle.domain([0, d3.max(data, function (d) {return d.time;})]);
+
+        //modify number of axes based on data
+        rad.domain([0, d3.max(data, function (d) {return d.y0 + d.y;})]);
 
         //apply values to layers and set colorscale
         svg.selectAll(".layer")
@@ -122,17 +119,14 @@ var main = (function () {
             .data(d3.range(angle.domain()[1]))
             .enter().append("g")
             .attr("class", "axis")
-            .attr("transform", function (d) {
-                return "rotate(" + angle(d) * 180/Math.PI + ")";
-            })
+            .attr("transform", function (d) {return "rotate("+angle(d)*180/Math.PI+")";})
             .call(d3.svg.axis()
                 .scale(rad.copy().range([-innerRad, -outerRad]))
-                .orient("left")
-                .ticks((outerRad-innerRad)/15))
+                .orient("right")
+                .ticks((outerRad-innerRad)/15)
+            )
             .append("text")
-            .attr("y", -innerRad + 3)
-            .attr("dy", ".70em")
-            .attr("text-anchor", "middle")
+            .attr("y", 12 - innerRad)
             .text(function (d) {
                 if(svg.selectAll(".axis")[0].length == 7) {
                     return day(d);
@@ -142,7 +136,6 @@ var main = (function () {
                     return other(d);
                 }
             });
-        //randAccessor = false;
         if(randAccessor) {
             prevd = data;
         }
